@@ -127,6 +127,14 @@ def remove_viewers(host_id, recording_id, users):
     session.commit()
     return 'Successful'
 
+def viewable(user_id, recording_id):
+    email = get_user_email(user_id)
+    try:
+        session.query(Viewer).filter(Viewer.email == email).filter(Viewer.recording_id == recording_id).one()
+    except sqlalchemy.orm.exc.NoResultFound:
+        return 'Not Viewable'
+    return 'Viewable'
+
 def viewer_already(email, recording_id):
     try:
         session.query(Viewer).filter(Viewer.email == email).filter(Viewer.recording_id == recording_id).one()

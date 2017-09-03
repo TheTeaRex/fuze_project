@@ -93,6 +93,10 @@ class RemoveViewers(Resource):
             abort(400, 'no users were provided to remove')
         msg = query.remove_viewers(host_id, recording_id, args['users'])
         return {'result': msg}
+
+class Viewable(Resource):
+    def get(self, user_id, recording_id):
+        return {'result': query.viewable(user_id, recording_id)}
         
 
 api.add_resource(ListUsers, '/users/')
@@ -104,6 +108,7 @@ api.add_resource(Delete, '/delete/<int:recording_id>/')
 api.add_resource(Share, '/share/<int:recording_id>/')
 api.add_resource(ListViewers, '/viewers/<int:recording_id>/')
 api.add_resource(RemoveViewers, '/remove_viewers/<int:recording_id>/')
+api.add_resource(Viewable, '/viewable/<int:user_id>/<int:recording_id>/')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
