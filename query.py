@@ -86,8 +86,6 @@ def share_recording(host_id, recording_id, users):
     return emails
 
 def list_viewers(host_id, recording_id):
-    if not is_owner(host_id, recording_id):
-        return 'You do not have permission to list the viewers of this recording'
     viewers = session.query(Viewer).filter(Viewer.recording_id == recording_id).all()
     result = []
     for viewer in viewers:
