@@ -1,1 +1,1 @@
-# fuze_proiject
+# fuze_project
