@@ -1,15 +1,15 @@
-Assumption:
+Assumptions:
  - All the users are in the User table, I provided create_users.py to create 12 users for testing purposes
  - Users are using the api with basic http authentication, create_users.py creates the users with a simple password for testing purposes
 
-File Explanation:
+Files Explanation:
 setup_tables.py -  sets up the database for sqlite and creates the 3 tables for this project. User, Recording and Viewer.
 create_users.py -  creates 12 users with email address.
 server.py       -  runs the restful api service.
 query.py        -  provides the backend functionalities for the restful api service.
 test_service.py -  a test file to run a bunch of tests against the running api, it does requires the DB to be in a certain state, remove the current DB, runs setup_db.py and create_users.py
 
-Service available:
+Services available:
  - /users/ ~ lists all the users in the database
  - /recordings/ ~ lists all the recordings that current user owns
  - /recording/<recording_id> ~ returns a recording info
@@ -21,3 +21,8 @@ Service available:
  - /viewers/<recording_id/ ~ lists all the users that have access to the given recording
  - /remove_viewers/<recording_id>/ ~ removes users permission to access the given recording, prvode the user_id of the users in param, ',' is the delimiter for multiple users
  - /viewable/<user_id>/<recording_id>/ ~ given the user_id and the recording_id, returns if 'Viewable' if user has access to the recording, otherwise returns 'Not Viewable'
+
+With basic http authentication, we can use the user authentication to get their user id to ensure they have permission to perform certain actions.
+These apis were designed to be straight forward to use.
+Listing users (users) and check if a user have permission to access a recording (viewable) does not require authentication.
+I have used a chrome extension/application - Postman to help with testing the api responses.
