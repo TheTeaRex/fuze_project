@@ -185,10 +185,16 @@ assert result['result'] == expected
 # removing user 4 and 5 as viewers from recording 1
 auth = get_auth(USERS[0])
 params = {'users': '4,5'}
+res = requests.get(BASE_URL + '/viewers/1', auth=auth)
+result = json.loads(res.text)
+assert USERS[3]['email'] in result['result']
+assert USERS[4]['email'] in result['result']
 res = requests.get(BASE_URL + '/remove_viewers/1', auth=auth, params=params)
 res = requests.get(BASE_URL + '/viewers/1', auth=auth)
 result = json.loads(res.text)
 assert len(result['result']) == 4 
+assert USERS[3]['email'] not in result['result']
+assert USERS[4]['email'] not in result['result']
 
 # check if a user has access to the recording, no auth required
 res = requests.get(BASE_URL + '/viewable/2/1')
