@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
  
-from setup import Base, User
+from setup_db import Base, User
 import constant
 db = 'sqlite:///{}'.format(constant.DATABASE)
  

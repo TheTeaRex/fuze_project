@@ -29,6 +29,12 @@ class ListUsers(Resource):
     def get(self):
         return query.list_users()
 
+class Recording(Resource):
+    def get(self, recording_id):
+        host_id = check_auth()
+        msg = query.get_recording(host_id, recording_id)
+        return {'result': msg}
+
 class ListRecording(Resource):
     def get(self):
         host_id = check_auth()
@@ -101,6 +107,7 @@ class Viewable(Resource):
 
 api.add_resource(ListUsers, '/users/')
 api.add_resource(ListRecording, '/recordings/')
+api.add_resource(Recording, '/recording/<int:recording_id>/')
 api.add_resource(Create, '/create/')
 api.add_resource(MakePrivate, '/make_private/<int:recording_id>/')
 api.add_resource(MakePublic, '/make_public/<int:recording_id>/')

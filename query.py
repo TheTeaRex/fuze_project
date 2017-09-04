@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import sqlalchemy.orm.exc
  
-from setup import Base, User, Recording, Viewer
+from setup_db import Base, User, Recording, Viewer
 import constant
 db = 'sqlite:///{}'.format(constant.DATABASE)
  
@@ -23,6 +23,9 @@ def check_auth(auth):
     return user.id
 
 def list_users():
+    '''
+    list all the users in the database
+    '''
     users = session.query(User).all()
     result = []
     for user in users:
@@ -30,26 +33,50 @@ def list_users():
     return result
 
 def list_recording(host_id):
+    '''
+    list all the recording that the given user's own
+    '''
     recordings = session.query(Recording).filter(Recording.host_id == host_id).all()
     return [recording.id for recording in recordings]
 
+def get_recording(host_id, recording_id):
+    try:
+        recording = session.query(Recording).filter(Recording.host_id == host_id).filter(Recording.id == recording_id).one()
+    except sqlalchemy.orm.exc.NoResultFound:
+        return 'No recording found with id - {}'.format(recording_id)
+    return {
+        'host_id': recording.host_id,
+        'private': recording.private,
+        'url': recording.url
+    }
+
 def add_recording(host_id, private, url):
+    '''
+    create a new recording with the given host id, recording type, and url to the recording
+    '''
     new_recording = Recording(host_id=host_id, private=private, url=url)
     session.add(new_recording)
     session.commit()
 
 def make_private(host_id, recording_id):
-    # once made private, need to clean up viewers
+    '''
+    turn a recording to private type
+    note that it does remove all the viewers to this recording
+    '''
     try:
         recording = session.query(Recording).filter(Recording.id == recording_id).filter(Recording.host_id == host_id).one()
         recording.private = 1
         session.commit()
     except sqlalchemy.orm.exc.NoResultFound:
         return 'No recording found with id - {}'.format(recording_id)
+    # once made private, need to clean up viewers
     remove_all_viewers(recording_id)
     return 'Successful'
 
 def make_public(host_id, recording_id):
+    '''
+    turn a recording to public type
+    '''
     try:
         recording = session.query(Recording).filter(Recording.id == recording_id).filter(Recording.host_id == host_id).one()
         recording.private = 0
@@ -59,6 +86,9 @@ def make_public(host_id, recording_id):
     return 'Successful'
 
 def delete_recording(host_id, recording_id):
+    '''
+    delete the given recording
+    '''
     try:
         recording = session.query(Recording).filter(Recording.id == recording_id).one()
         if recording.host_id != host_id:
@@ -70,6 +100,9 @@ def delete_recording(host_id, recording_id):
     return 'Deletetion successful'
 
 def share_recording(host_id, recording_id, users):
+    '''
+    share the recording to other users
+    '''
     if not is_owner(host_id, recording_id):
         return 'You do not own this recording, cannot share it'
     if is_recording_private(recording_id):
@@ -86,6 +119,9 @@ def share_recording(host_id, recording_id, users):
     return emails
 
 def list_viewers(host_id, recording_id):
+    '''
+    list all the viewers for the given recording
+    '''
     viewers = session.query(Viewer).filter(Viewer.recording_id == recording_id).all()
     result = []
     for viewer in viewers:
@@ -93,6 +129,9 @@ def list_viewers(host_id, recording_id):
     return result
 
 def add_viewer(user_id, recording_id):
+    '''
+    add user to the Viewer table if doesn't exist
+    '''
     email = get_user_email(int(user_id))
     if not viewer_already(email, recording_id):
         new_viewer = Viewer(recording_id=recording_id, email=email)
@@ -101,6 +140,9 @@ def add_viewer(user_id, recording_id):
         return email
 
 def remove_all_viewers(recording_id):
+    '''
+    remove all the viewers from a recording
+    '''
     try:
         viewers = session.query(Viewer).filter(Viewer.recording_id == recording_id).all()
     except sqlalchemy.orm.exc.NoResultFound:
@@ -110,6 +152,9 @@ def remove_all_viewers(recording_id):
     session.commit()
 
 def remove_viewers(host_id, recording_id, users):
+    '''
+    remove one or more viewers from a recording
+    '''
     if not is_owner(host_id, recording_id):
         return 'You do not own this recording, cannot remove viewer'
     users = users.split(',')
@@ -126,7 +171,12 @@ def remove_viewers(host_id, recording_id, users):
     return 'Successful'
 
 def viewable(user_id, recording_id):
+    '''
+    check if a user has access to a recording
+    '''
     email = get_user_email(user_id)
+    if is_owner(user_id, recording_id):
+        return 'Viewable'
     try:
         session.query(Viewer).filter(Viewer.email == email).filter(Viewer.recording_id == recording_id).one()
     except sqlalchemy.orm.exc.NoResultFound:
@@ -134,6 +184,9 @@ def viewable(user_id, recording_id):
     return 'Viewable'
 
 def viewer_already(email, recording_id):
+    '''
+    check if this user has been added to viewer list for given recording
+    '''
     try:
         session.query(Viewer).filter(Viewer.email == email).filter(Viewer.recording_id == recording_id).one()
     except sqlalchemy.orm.exc.NoResultFound:
@@ -141,6 +194,9 @@ def viewer_already(email, recording_id):
     return True
 
 def is_owner(host_id, recording_id):
+    '''
+    check if a user the owner of a recording
+    '''
     try:
         recording = session.query(Recording).filter(Recording.host_id == host_id).filter(Recording.id == recording_id).one()
     except sqlalchemy.orm.exc.NoResultFound:
@@ -148,11 +204,17 @@ def is_owner(host_id, recording_id):
     return True
 
 def is_recording_private(recording_id):
+    '''
+    check if a recording is private
+    '''
     recording = session.query(Recording).filter(Recording.id == recording_id).one()
     if recording.private == 0:
         return False
     return True
 
 def get_user_email(user_id):
+    '''
+    get the user email
+    '''
     user = session.query(User).filter(User.id == user_id).one()
     return user.email
